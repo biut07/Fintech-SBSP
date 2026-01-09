@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Clientes (API)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+  </style>
+</head>
+
+<body class="bg-neutral-100">
+  <div class="min-h-screen flex items-center justify-center py-10">
+    <div class="w-full max-w-5xl bg-white rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.08)] p-8">
+      <!-- Cabeçalho -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <div>
+          <h1 class="text-3xl font-extrabold tracking-tight">Clientes cadastrados</h1>
+          <p class="text-neutral-500 mt-1">Dados vindos do microserviço clientes.</p>
+        </div>
+        <div class="flex gap-2 justify-end">
+          <button id="btnAtualizar"
+                  class="rounded-xl px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold shadow">
+            Atualizar
+          </button>
+        </div>
+      </div>
+
+      <!-- Mensagem de status -->
+      <p id="msg" class="text-sm text-neutral-500 mb-3"></p>
+
+      <!-- Tabela -->
+      <div class="overflow-x-auto rounded-2xl border border-neutral-200">
+        <table class="min-w-full text-left text-sm">
+          <thead class="bg-neutral-50 border-b border-neutral-200">
+            <tr>
+              <th class="px-4 py-3 font-semibold text-neutral-700">ID</th>
+              <th class="px-4 py-3 font-semibold text-neutral-700">Nome</th>
+              <th class="px-4 py-3 font-semibold text-neutral-700">E-mail</th>
+              <th class="px-4 py-3 font-semibold text-neutral-700">CPF</th>
+              <th class="px-4 py-3 font-semibold text-neutral-700">Telefone</th>
+            </tr>
+          </thead>
+          <tbody id="listaClientes" class="divide-y divide-neutral-100">
+            <!-- linhas criadas via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- link pra voltar -->
+      <div class="mt-4 text-right">
+        <a href="home.html"
+           class="inline-block text-sm text-sky-600 hover:text-sky-700 font-medium">
+          ◀ Voltar para Home
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_CLIENTES = "http://localhost:8080/api/clientes";
+
+    function limparTabela() {
+      const corpo = document.getElementById("listaClientes");
+      while (corpo.firstChild) corpo.removeChild(corpo.firstChild);
+    }
+
+    function formatarCpf(cpf) {
+      if (!cpf) return "";
+      const num = cpf.replace(/\D/g, "");
+      if (num.length !== 11) return cpf;
+      return num.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+    }
+
+    async function carregarClientes() {
+      const msg = document.getElementById("msg");
+      const btn = document.getElementById("btnAtualizar");
+      const corpo = document.getElementById("listaClientes");
+
+      msg.textContent = "Carregando clientes...";
+      msg.className = "text-sm text-neutral-500 mb-3";
+
+      btn.disabled = true;
+      btn.classList.add("opacity-60", "cursor-not-allowed");
+
+      limparTabela();
+
+      try {
+        const resp = await fetch(API_CLIENTES);
+        if (!resp.ok) throw new Error("Erro ao buscar clientes: " + resp.status);
+        const dados = await resp.json();
+
+        if (!dados || dados.length === 0) {
+          msg.textContent = "Nenhum cliente cadastrado ainda.";
+          msg.className = "text-sm text-neutral-500 mb-3";
+          return;
+        }
+
+        dados.forEach(cli => {
+          const tr = document.createElement("tr");
+          tr.className = "hover:bg-neutral-50";
+
+          const tdId   = document.createElement("td");
+          const tdNome = document.createElement("td");
+          const tdEmail = document.createElement("td");
+          const tdCpf  = document.createElement("td");
+          const tdTel  = document.createElement("td");
+
+          tdId.className    = "px-4 py-3 text-xs text-neutral-500 max-w-[160px] break-words";
+          tdNome.className  = "px-4 py-3 text-sm text-neutral-800";
+          tdEmail.className = "px-4 py-3 text-sm text-neutral-700";
+          tdCpf.className   = "px-4 py-3 text-sm text-neutral-700";
+          tdTel.className   = "px-4 py-3 text-sm text-neutral-700";
+
+          tdId.textContent    = cli.id || "";
+          tdNome.textContent  = cli.nome || "";
+          tdEmail.textContent = cli.email || "";
+          tdCpf.textContent   = formatarCpf(cli.cpf || "");
+          tdTel.textContent   = cli.telefone || "";
+
+          tr.appendChild(tdId);
+          tr.appendChild(tdNome);
+          tr.appendChild(tdEmail);
+          tr.appendChild(tdCpf);
+          tr.appendChild(tdTel);
+
+          corpo.appendChild(tr);
+        });
+
+        msg.textContent = `Total de clientes: ${dados.length}`;
+        msg.className = "text-sm text-emerald-600 mb-3";
+      } catch (err) {
+        console.error(err);
+        msg.textContent = "Erro ao carregar clientes. Verifique se a API (porta 8080) está rodando.";
+        msg.className = "text-sm text-red-600 mb-3";
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove("opacity-60", "cursor-not-allowed");
+      }
+    }
+
+    document.getElementById("btnAtualizar").addEventListener("click", carregarClientes);
+    // carrega automaticamente ao abrir a página
+    document.addEventListener("DOMContentLoaded", carregarClientes);
+  </script>
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tela de Pix</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; }
+    </style>
+</head>
+
+<body class="flex flex-col min-h-screen bg-gray-50">
+
+    <!-- Cabeçalho -->
+    <header class="bg-white shadow-md sticky top-0 z-10">
+        <nav class="container mx-auto p-4 flex justify-between items-center">
+            <span class="font-bold text-xl text-emerald-600">Serviço de Benefício Social Privado</span>
+
+            <a href="home.html"
+               class="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 border border-gray-300 hover:bg-gray-100 transition">
+                Voltar
+            </a>
+        </nav>
+    </header>
+
+    <!-- Corpo -->
+    <main class="flex-grow flex items-center justify-center p-4">
+        <div class="bg-white shadow-lg rounded-2xl p-8 w-full max-w-md mx-auto">
+
+            <h2 class="text-2xl font-semibold text-center text-gray-700 mb-6">
+                Fazer Pagamento PIX
+            </h2>
+
+            <!-- CHAVE PIX -->
+            <div class="mb-4">
+                <label class="font-medium text-gray-700">Chave PIX</label>
+                <input id="inputChave" type="text"
+                    placeholder="Digite a chave PIX"
+                    class="w-full mt-1 p-3 border rounded-lg outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+
+            <!-- VALOR -->
+            <div class="mb-4">
+                <label class="font-medium text-gray-700">Valor</label>
+                <div id="inputValor" contenteditable="true"
+                    class="w-full mt-1 p-3 border rounded-lg outline-none focus:ring-2 focus:ring-emerald-500 bg-gray-50"></div>
+            </div>
+
+            <!-- BOTAO -->
+            <button id="btnPix"
+                class="w-full mt-4 bg-emerald-500 text-white font-medium py-3 rounded-lg hover:bg-emerald-600 transition">
+                Efetuar PIX
+            </button>
+
+            <!-- MENSAGEM -->
+            <p id="mensagem" class="text-center mt-4 text-sm hidden"></p>
+
+        </div>
+    </main>
+
+    <!-- Script -->
+    <script>
+    const API_BASE     = "http://localhost:8080/api";
+    const API_COMPRAS  = `${API_BASE}/compras`;
+
+    const inputChave = document.getElementById("inputChave");
+    const inputValor = document.getElementById("inputValor");
+    const btnPix     = document.getElementById("btnPix");
+    const msg        = document.getElementById("mensagem");
+
+    // Permitir apenas números
+    inputValor.addEventListener("keydown", (e) => {
+        const especiais = [
+            "Backspace", "Delete", "ArrowLeft", "ArrowRight",
+            "ArrowUp", "ArrowDown", "Tab", "Home", "End"
+        ];
+        if (especiais.includes(e.key) || e.ctrlKey || e.metaKey) return;
+
+        const ehNumero = /^[0-9]$/.test(e.key);
+        if (!ehNumero) e.preventDefault();
+    });
+
+    // Formatar ao sair do campo
+    inputValor.addEventListener("blur", () => {
+        let t = inputValor.innerText.trim();
+        t = t.replace(/\./g, "").replace(",", ".");
+        let num = parseFloat(t);
+
+        if (isNaN(num) || num < 0) {
+            inputValor.innerText = "0,00";
+            return;
+        }
+
+        inputValor.innerText = num.toLocaleString("pt-BR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
+    });
+
+    function mostrarMensagem(txt, tipo) {
+        msg.textContent = txt;
+        msg.className =
+            "text-center mt-4 text-sm " +
+            (tipo === "ok" ? "text-emerald-600" : "text-red-600");
+        msg.classList.remove("hidden");
+    }
+
+    async function registrarCompraPix(valorNumero, chavePix) {
+        const clienteId = localStorage.getItem("clienteId");
+        if (!clienteId) {
+            mostrarMensagem("Nenhum usuário logado. Faça login novamente.", "erro");
+            return false;
+        }
+
+        // 🔎 Verifica saldo
+        try {
+            const respSaldo = await fetch(`${API_BASE}/saldo/${clienteId}`);
+            if (!respSaldo.ok) throw new Error("Erro ao consultar saldo.");
+
+            const saldo = await respSaldo.json();
+            if (Number(saldo) < valorNumero) {
+                mostrarMensagem("Saldo insuficiente para realizar o PIX.", "erro");
+                return false;
+            }
+        } catch (e) {
+            console.error(e);
+            mostrarMensagem("Erro ao verificar saldo. Tente novamente.", "erro");
+            return false;
+        }
+
+        // 💾 Registra o PIX
+        try {
+            const resp = await fetch(API_COMPRAS, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    clienteId: clienteId,
+                    valor: valorNumero,
+                    formaPagamento: "PIX",
+                    descricao: `PIX enviado para ${chavePix}`
+                })
+            });
+
+            if (!resp.ok) {
+                throw new Error("Erro ao registrar PIX: " + resp.status);
+            }
+
+            return true;
+
+        } catch (e) {
+            console.error(e);
+            mostrarMensagem("Erro ao registrar o PIX. Verifique a API.", "erro");
+            return false;
+        }
+    }
+
+    // BOTÃO PIX
+    btnPix.addEventListener("click", async () => {
+        const chave = inputChave.value.trim();
+        const textoBruto = inputValor.innerText.trim();
+
+        let t = textoBruto.replace(/\./g, "").replace(",", ".");
+        const valor = parseFloat(t);
+
+        if (chave.length < 3) {
+            mostrarMensagem("Digite uma chave PIX válida.", "erro");
+            return;
+        }
+
+        if (isNaN(valor) || valor <= 0) {
+            mostrarMensagem("Informe um valor maior que zero.", "erro");
+            return;
+        }
+
+        const ok = await registrarCompraPix(valor, chave);
+        if (!ok) return;
+
+        mostrarMensagem(
+            `PIX de R$ ${inputValor.innerText} enviado! Voltando ao menu...`,
+            "ok"
+        );
+
+        setTimeout(() => {
+            window.location.href = "home.html";
+        }, 4000);
+    });
+    </script>
+
+</body>
+</html>

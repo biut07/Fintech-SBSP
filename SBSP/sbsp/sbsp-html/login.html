@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tela de Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Poppins', sans-serif; }
+  </style>
+</head>
+
+<body class="bg-neutral-100">
+  <div class="flex items-center justify-center min-h-screen">
+    <div class="w-full max-w-2xl p-8 bg-white rounded-2xl shadow-[0_10px_30px_rgba(0,0,0,0.08)]">
+
+      <div class="text-center mb-6">
+        <h1 class="text-4xl font-extrabold tracking-tight">Bem-vindo!</h1>
+        <p class="text-neutral-500 mt-2">Faça o login para continuar.</p>
+      </div>
+
+      <div class="max-w-xl mx-auto">
+        <form id="loginForm" class="space-y-5" action="#">
+          
+          <div class="space-y-1.5">
+            <label class="block text-sm font-medium text-neutral-700" for="cpf">CPF</label>
+            <input
+              type="text" id="cpf" name="cpf" required
+              class="w-full rounded-xl border border-neutral-200 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+              placeholder="Digite seu CPF"
+            />
+          </div>
+
+          <div class="space-y-1.5">
+            <label class="block text-sm font-medium text-neutral-700" for="senha">Senha</label>
+            <input
+              type="password" id="senha" name="senha" required
+              class="w-full rounded-xl border border-neutral-200 px-4 py-3 outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+              placeholder="Digite sua senha"
+            />
+          </div>
+
+          <button
+            id="btnLogin" type="submit"
+            class="w-full rounded-xl py-3 font-semibold text-white bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 transition shadow"
+          >
+            Entrar
+          </button>
+
+          <p id="msg" class="text-center text-sm mt-1"></p>
+
+          <div class="text-center pt-2">
+            <p class="text-neutral-500">Não tem conta?</p>
+            <a href="cadastro.html"
+              class="inline-block mt-2 rounded-xl py-2 px-4 font-medium text-white bg-sky-500 hover:bg-sky-600 transition shadow">
+              Cadastre-se aqui
+            </a>
+          </div>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API = "http://localhost:8080/api";
+
+    const soNum = s => (s || "").replace(/\D/g, "");
+
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const cpf   = soNum(document.getElementById("cpf").value);
+      const senha = document.getElementById("senha").value.trim();
+      const msg   = document.getElementById("msg");
+      const btn   = document.getElementById("btnLogin");
+
+      msg.textContent = "";
+
+      if (!cpf || !senha) {
+        msg.textContent = "Informe CPF e senha.";
+        msg.className = "text-center text-red-600";
+        return;
+      }
+
+      btn.disabled = true;
+
+      try {
+        const r = await fetch(`${API}/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ cpf, senha })
+        });
+
+        if (!r.ok) throw new Error(await r.text());
+
+        const user = await r.json();
+
+        localStorage.setItem("clienteId",   user.id);
+        localStorage.setItem("clienteNome", user.nome || "");
+        localStorage.setItem("clienteCpf",  user.cpf  || "");
+
+        msg.textContent = "Login realizado! Redirecionando...";
+        msg.className   = "text-center text-emerald-600 text-sm mt-1";
+
+        setTimeout(() => window.location.href = "home.html", 1000);
+
+      } catch (err) {
+        msg.textContent = "CPF ou senha inválidos.";
+        msg.className = "text-center text-red-600";
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

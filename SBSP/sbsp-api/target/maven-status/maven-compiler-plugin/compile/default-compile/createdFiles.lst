@@ -1,0 +1,9 @@
+com\sbsp\api\micro\Compra.class
+com\sbsp\api\micro\LoginController$LoginRequest.class
+com\sbsp\api\micro\Cliente.class
+com\sbsp\api\micro\LoginController.class
+com\sbsp\api\micro\CompraController.class
+com\sbsp\api\micro\ClienteCadastroDTO.class
+com\sbsp\api\micro\MemoryStore.class
+com\sbsp\api\micro\ClienteController.class
+com\sbsp\api\SbspApiApplication.class

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Tela Personalização do Plano</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+	<style>
+		body { font-family: 'Poppins', sans-serif; }
+	</style>
+</head>
+
+<body class="flex flex-col min-h-screen bg-gray-50">
+    <!-- Cabeçalho -->
+    <header class="bg-white shadow-md sticky top-0 z-10">
+        <nav class="container mx-auto p-4 flex justify-between items-center">
+            <span class="font-bold text-xl text-emerald-600">
+                Serviço de Benefício Social Privado
+            </span>
+            <div>
+                <a href="home.html" 
+                    class="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 border border-gray-300 hover:bg-gray-100 transition">
+                    Voltar
+                </a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Conteúdo -->
+    <main class="container mx-auto p-4 flex-grow flex items-center justify-center">
+        <div class="bg-white shadow-lg rounded-2xl p-8 w-full max-w-lg">
+
+            <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                Personalização do Plano
+            </h1>
+
+            <p class="text-sm text-gray-600 mb-6 text-center">
+                Selecione quais benefícios deseja incluir no seu plano.
+                É necessário escolher <span class="font-semibold">“Sim”</span> em pelo menos um.
+            </p>
+
+            <form class="space-y-6" action="pagamento.html" id="beneficios-form">
+                
+                <!-- VT -->
+                <div>
+                    <label class="block font-medium text-gray-700 mb-2">VT</label>
+                    <div class="flex items-center space-x-6">
+                        <label class="flex items-center">
+                            <input type="radio" name="vt" value="sim"
+                                   class="rounded-full text-emerald-600 focus:ring-emerald-500" required>
+                            <span class="ml-2">Sim</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="vt" value="nao"
+                                   class="rounded-full text-emerald-600 focus:ring-emerald-500" required>
+                            <span class="ml-2">Não</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- VR -->
+                <div>
+                    <label class="block font-medium text-gray-700 mb-2">VR</label>
+                    <div class="flex items-center space-x-6">
+                        <label class="flex items-center">
+                            <input type="radio" name="vr" value="sim"
+                                   class="rounded-full text-emerald-600 focus:ring-emerald-500" required>
+                            <span class="ml-2">Sim</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="vr" value="nao"
+                                   class="rounded-full text-emerald-600 focus:ring-emerald-500" required>
+                            <span class="ml-2">Não</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Convênio Médico -->
+                <div>
+                    <label class="block font-medium text-gray-700 mb-2">Convênio Médico</label>
+                    <div class="flex items-center space-x-6">
+                        <label class="flex items-center">
+                            <input type="radio" name="cm" value="sim"
+                                   class="rounded-full text-emerald-600 focus:ring-emerald-500" required>
+                            <span class="ml-2">Sim</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="cm" value="nao"
+                                   class="rounded-full text-emerald-600 focus:ring-emerald-500" required>
+                            <span class="ml-2">Não</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Gympass -->
+                <div>
+                    <label class="block font-medium text-gray-700 mb-2">Gympass</label>
+                    <div class="flex items-center space-x-6">
+                        <label class="flex items-center">
+                            <input type="radio" name="gym" value="sim"
+                                   class="rounded-full text-emerald-600 focus:ring-emerald-500" required>
+                            <span class="ml-2">Sim</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="gym" value="nao"
+                                   class="rounded-full text-emerald-600 focus:ring-emerald-500" required>
+                            <span class="ml-2">Não</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-emerald-500 text-white font-medium py-3 rounded-lg hover:bg-emerald-600 transition">
+                    Ir para pagamento
+                </button>
+
+            </form>
+        </div>
+    </main>
+
+    <script>
+        const form = document.getElementById('beneficios-form');
+
+        form.addEventListener('submit', function(event) {
+            const algumSimMarcado = form.querySelector('input[value="sim"]:checked');
+            const primeiroRadio = form.querySelector('input[name="vt"]');
+
+            if (!algumSimMarcado) {
+                event.preventDefault();
+                primeiroRadio.setCustomValidity(
+                    'Você deve selecionar "Sim" em pelo menos um benefício para prosseguir.'
+                );
+                primeiroRadio.reportValidity();
+            } else {
+                primeiroRadio.setCustomValidity('');
+            }
+        });
+
+        form.querySelectorAll('input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                form.querySelector('input[name="vt"]').setCustomValidity('');
+            });
+        });
+    </script>
+
+</body>
+</html>
